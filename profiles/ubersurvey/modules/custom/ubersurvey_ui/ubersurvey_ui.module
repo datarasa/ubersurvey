@@ -1,0 +1,93 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_menu().
+ */
+function ubersurvey_ui_menu() {
+  $items = array();
+  //normal link
+  $items['home'] = array(
+    'page callback'    => 'home_contents',
+    'access arguments' => array('access content'), 
+  );
+  return $items;
+}
+
+function home_contents() {
+  return theme('home_contents'); 
+}
+function ubersurvey_ui_theme(){
+  return array(
+    'home_contents' => array(
+    'template' => 'home_contents',
+    'arguments' => array('results' => NULL)),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ubersurvey_ui_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'qform_node_form') {
+    if (isset($form['#node']->clone_from_original_nid)) {
+      $form['field_details']['#weight'] = 0;
+    }else {
+      $form['field_details']['#weight'] = 0;
+    }
+    $form['qforms']['#title'] = "Question Builder";
+    $form['qforms_settings']['#title'] = "Survey settings";
+    $form['qforms_settings']['qforms_submit_action']['#title'] = "Action to take on survey submission";
+    $form['qforms_settings']['qforms_submit_email']['#title'] = "Send an email on survey submission";
+    $form['qforms_settings']['qforms_submit_disable']['#disabled'] = TRUE;
+    $form['qforms_settings']['qforms_submit_disable']['#access'] = FALSE;
+  }
+  if ($form_id == 'publishcontent_toggle_status_form') {
+    if ($form['#theme'] == 'confirm_form') {
+      $qst = drupal_get_title();
+      $find = array("content", '<em class="placeholder">Unpublish</em>', '<em class="placeholder">Publish</em>');
+      $replace   = array("survey", "Inactivate", "Activate");
+      $newqs = str_replace($find, $replace, $qst); 
+      drupal_set_title($newqs);
+    }
+  }
+  if ($form_id == 'views_exposed_form' && $form_state['view']->name == 'my_surveys_list') {
+    $form['status_1']['#options'][1] = 'Active';
+    $form['status_1']['#options'][0] = 'Inactive';
+  }
+  if ($form_id == 'qform_node_form' && arg(2) == 'clone' && arg(3) == 'confirm') {
+    $node = node_load(arg(1));
+    $form['title']['#default_value'] = "Copy of ".$node->title;
+    drupal_set_title('Create copy of Survey "'.$node->title.'"');
+  }
+  if ($form_id == 'qform_node_form' and arg(2)!="edit") {
+    drupal_set_title(t('Create Survey'));  
+  }elseif ($form_id == 'qform_node_form' and arg(2) =="edit") {
+    drupal_set_title(t('Update Survey'));  
+  }
+}
+
+/**
+ * Implements hook_menu_alter.
+ * Check access for forum menu item.
+ */
+function ubersurvey_ui_menu_alter(&$items) {
+  $items['node/%publishcontent_tab/publish/%publishcontent_security_token']['title'] = "Activate";
+  $items['node/%publishcontent_tab/unpublish/%publishcontent_security_token']['title'] = "Inactivate";
+  $items['node/%node/qforms-results']['title'] = "Responses";
+  $items['node/%node/clone/%clone_token']['title callback'] = "ubersurvey_copy_survey_title";
+  $items['node/add/qform']['title'] = "Survey";
+}
+
+function ubersurvey_copy_survey_title($node) {
+ // A hack to present a shorter title in contextual links.
+  if (current_path() != 'node/' . $node->nid) {
+    return t('Clone');
+  }
+  if (variable_get('clone_use_node_type_name', 0)) {
+    return t('Clone this !type', array('!type' => drupal_strtolower(node_type_get_name($node))));
+  }
+  return t('Copy Survey');
+}
+
+

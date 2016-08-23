@@ -1,0 +1,7 @@
+;$id$
+
+name = UberSurvey blocks
+description = Uber Survey blocks used for custom block implementation
+package = Ubersuvey
+core = 7.x
+version = 7.x-1.0-alpha

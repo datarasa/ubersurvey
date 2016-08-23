@@ -1,0 +1,132 @@
+<?php
+/**
+ * Implements hook_form_alter.
+ */
+function ubersurvey_access_form_qform_node_form_alter(&$form, &$form_state, $form_id) {
+
+  if ($form['#node']->status != 0 && $form['#node']->nid) {
+    $form['title'] = array();
+    $form['field_details'] = array();
+    $form['field_access_once'] = array();
+    $form['actions'] = array();
+    $form['additional_settings']['#access'] = FALSE;
+    $form['qforms'] = array(
+      'form' => drupal_get_form('ubersurvey_access_qforms_edit_form'),
+      '#weight' => 10,
+    );
+  }
+}
+
+/**
+ * Implements hook_node_view.
+ */
+function ubersurvey_access_node_view($node, $view_mode) {
+  // Show qform form.,
+  $result = ubersurvey_access_get_form_submission_by_user($node->nid);
+  if ($node->type == "qform" && $node->status == 0 && !ubersurvey_access_to_author($node->uid)) {
+    drupal_set_title('Access denied');
+    $node->content['field_details'] = array();
+    $node->content['qform'] = array(
+        'form' => drupal_get_form('ubersurvey_access_qforms_unpublished_form'),
+        '#weight' => 10,
+    );
+  }
+  else {
+    if (!ubersurvey_access_to_author($node->uid)) {
+      if ($result != "logout") {
+        $submissions = $result['data'];
+      }
+      if ($node->type == "qform" && isset ($node->field_access_once[$node->language][0]['value']) &&
+          $node->field_access_once[$node->language][0]['value'] == 'YES' && $result == 'logout') {
+        drupal_set_title('Sign in to your account to fill out this form');
+        $node->content['field_details'] = array();
+        $node->content['qform'] = array(
+            'form' => drupal_get_form('ubersurvey_access_qforms_logout_form', $node->nid),
+            '#weight' => 10,
+        );
+      }
+      elseif ($node->type == "qform" && isset ($node->field_access_once[$node->language][0]['value']) &&
+          $node->field_access_once[$node->language][0]['value'] == 'YES' && isset($submissions)) {
+        drupal_set_title('You\'ve already responded');
+        $node->content['field_details'] = array();
+        $node->content['qform'] = array(
+            'form' => drupal_get_form('ubersurvey_access_qforms_login_form'),
+            '#weight' => 10,
+        );
+      }
+    }
+  }
+  return $node;
+}
+/**
+ * Callback function for unpublished form
+ */
+function ubersurvey_access_qforms_unpublished_form($form, &$form_state) {
+  $form['message_palaceholder'] = array(
+      '#markup' => '<div id="inactive-message">' . t('Survey is not available.') . '</div>',
+  );
+  return $form;
+}
+/*
+**
+* Callback function for unpublished form
+*/
+function ubersurvey_access_qforms_edit_form($form, &$form_state) {
+  $form['message_palaceholder'] = array(
+    '#markup' => '<div id="inactive-message">' . t('You can not edit Survey while its Active.') . '</div>',
+  );
+  return $form;
+}
+
+/**
+ * Callback function for form building for loged in user.
+ */
+function ubersurvey_access_qforms_login_form($form, &$form_state) {
+  $form['message_palaceholder'] = array(
+    '#markup' => '<div id="inactive-message">' . t('You can only fill out this form once.') . '</div>',
+  );
+  return $form;
+}
+/**
+ * Callback function for form building for loged out user.
+ */
+function ubersurvey_access_qforms_logout_form($form, &$form_state, $entity_id) {
+  $alias = drupal_get_path_alias('node/'.$entity_id);
+  $internal_link = "<a href='/user?destination=".$alias."'>sign in</a>";
+  $form['message_palaceholder'] = array(
+    '#markup' => '<div id="inactive-message">' . t('This form contains features which require ') . $internal_link . t('.') . '</div>',
+  );
+  return $form;
+}
+/**
+ * Select Query for checking qform submissions.
+ */
+function ubersurvey_access_get_form_submission_by_user($nid) {
+  global $user;
+  $uid = $user->uid;
+  if ($user->uid) {
+    return db_select('qforms_submission', 's')
+        ->fields('s', array('sid', 'data'))
+        ->condition('uid', $uid)
+        ->condition('nid', $nid)
+        ->orderBy('sid', 'DESC')
+        ->range(0, 1)
+        ->execute()
+        ->fetchAssoc();
+  }
+  else {
+    return "logout";
+  }
+}
+/**
+ * check if author.
+ */
+function ubersurvey_access_to_author($uid) {
+  global $user;
+  if ($user->uid === $uid) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}

@@ -1,0 +1,52 @@
+; UberSurvey make file for local development
+core = "7.x"
+api = "2"
+
+projects[drupal][version] = "7.x"
+; include the d.o. profile base
+includes[] = "drupal-org.make"
+
+; +++++ TODO modules without versions +++++
+
+projects[ubersurvey_views][version] = "" ; TODO add version
+projects[ubersurvey_views][subdir] = "custom"
+
+projects[ubersurvey_comment][version] = "" ; TODO add version
+projects[ubersurvey_comment][subdir] = "custom"
+
+projects[ubersurvey_block][version] = "" ; TODO add version
+projects[ubersurvey_block][subdir] = "custom"
+
+projects[ubersurvey_fields][version] = "" ; TODO add version
+projects[ubersurvey_fields][subdir] = "custom"
+
+projects[ubersurvey_media][version] = "" ; TODO add version
+projects[ubersurvey_media][subdir] = "custom"
+
+projects[ubersurvey_menu][version] = "" ; TODO add version
+projects[ubersurvey_menu][subdir] = "custom"
+
+projects[ubersurvey_seo][version] = "" ; TODO add version
+projects[ubersurvey_seo][subdir] = "custom"
+
+projects[ubersurvey_site][version] = "" ; TODO add version
+projects[ubersurvey_site][subdir] = "custom"
+
+projects[ubersurvey_taxonomy][version] = "" ; TODO add version
+projects[ubersurvey_taxonomy][subdir] = "custom"
+
+projects[ubersurvey_users][version] = "" ; TODO add version
+projects[ubersurvey_users][subdir] = "custom"
+
+projects[ubersurvey_node_article][version] = "" ; TODO add version
+projects[ubersurvey_node_article][subdir] = "custom"
+
+projects[ubersurvey_node_page][version] = "" ; TODO add version
+projects[ubersurvey_node_page][subdir] = "custom"
+
+projects[ubersurvey_node_qform][version] = "" ; TODO add version
+projects[ubersurvey_node_qform][subdir] = "custom"
+
+projects[ubersurvey_scald][version] = "" ; TODO add version
+projects[ubersurvey_scald][subdir] = "custom"
+

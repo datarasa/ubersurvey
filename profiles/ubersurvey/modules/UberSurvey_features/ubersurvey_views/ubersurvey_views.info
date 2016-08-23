@@ -1,0 +1,17 @@
+name = UberSurvey Views
+core = 7.x
+package = CTools
+dependencies[] = charts
+dependencies[] = comment
+dependencies[] = ctools
+dependencies[] = search
+dependencies[] = strongarm
+dependencies[] = taxonomy
+dependencies[] = views
+features[ctools][] = strongarm:strongarm:1
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[variable][] = views_exposed_filter_any_label
+features[variable][] = views_show_additional_queries
+features[views_view][] = charts_demo
+features[views_view][] = my_surveys_list

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the UberSurvey Site feature.
+ */
+
+include_once 'ubersurvey_site.features.inc';

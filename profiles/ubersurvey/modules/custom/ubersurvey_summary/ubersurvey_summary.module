@@ -1,0 +1,192 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_menu().
+ */
+function ubersurvey_summary_menu() {
+  $items['node/%node/summary'] = array(
+    'title' => 'Summary',
+    'page callback' => 'summary_tab_contents',
+    'access callback' => 'ubersurvey_summary_access_restrict',
+    'access arguments' => array(1),
+    'weight' => 4,
+    'type' => MENU_LOCAL_TASK,
+  );  
+  return $items;
+}
+
+function summary_tab_contents() {
+  $objt = get_survey_definition();
+  $title = '';
+  $example = '';
+  if ($objt[0]['qforms_last_element_id']>0) {
+    foreach ($objt as $ky=>$obj) {
+	  if($ky!=0){	
+      foreach ($obj as $key=>$val) {
+	    $type = $obj[$key]['type'];
+	    if ($type != 'markup') {
+          $dataobjarr = "";
+		  $dataobj = "";
+	      $title = $obj[$key]['title'];
+	      $query = db_select('qforms_submission','qfb');
+	      $query->fields('qfb', array('data'));
+	      $query->condition('qfb.nid', arg(1));
+	      $result = $query->execute()->fetchAll();
+
+	      foreach($result as $res) {
+	        $dataobj = unserialize($res->data);
+ 		    if (isset($dataobj[$key]) and $dataobj[$key] != "") {
+			  if($type != 'checkboxes') {  
+			    $dataobjarr[] = $dataobj[$key];
+			  }else {
+			    foreach($dataobj[$key] as $vl) {
+				  if($vl != "0") {
+				    $dataobjarr[] = $vl;
+				  }
+			    }
+			  }
+		    }
+		  }
+	    }
+	    if ($type == 'radios' || $type == 'select') {
+	      $summary[] = draw_chart_pie($dataobjarr, $title);
+	    }elseif ($type == 'checkboxes') {
+	      $summary[] = draw_chart_bar($dataobjarr, $title);
+	    }elseif($type == 'textarea' || $type == 'textfield' || $type == 'date' || $type == 'number' || $type == 'email' || $type == 'url'){
+		  $rows = print_text($dataobjarr);
+		  $total = count($rows);
+		  if($total == 0) {
+			$rows[] = array("No response found.");
+		  }
+
+		  $summary[] = array(
+            'maintable' => array(
+            '#theme' => 'table',
+            '#caption' => $title." (".$total." responses)",
+            '#rows' => $rows,
+          ));
+	    }
+      }
+	  }
+    }
+  }
+  return theme('summary_tab_contents',array('summary' => $summary)); 
+}
+
+function print_text($dataobjarr) {
+  $rows = array();
+  if (!empty($dataobjarr)) {
+	foreach ($dataobjarr as $keytxt=>$valtxt) {
+      $rows[] = array($valtxt);
+    }
+  }
+  return $rows;
+}
+
+function draw_chart_bar($dataobjarr, $title) {
+  $summary = _chart_column_simple($dataobjarr);
+  $summary['chart']['#title'] = t($title);
+  $summary['chart']['#chart_type'] = 'bar';
+  return $summary;
+}
+
+function _chart_column_simple($dataobjarr) {
+  if (!empty($dataobjarr)) {
+    $total = count($dataobjarr); 
+    $objres = array_count_values($dataobjarr);
+    $chart = array(
+      '#type' => 'chart',
+      '#chart_type' => 'column',
+      '#title' => t('Column simple'),
+      '#font' => 'OpenSansRegular',
+	  '#title_font_weight' => 'bold',
+    );
+	$count = 0;
+    foreach ($objres as $opt=>$value) {
+      $perce = round($value/$total*100);
+      $lblarr[] = $opt;
+      $chart[$opt] = array(
+        '#type' => 'chart_data',
+        '#title' => t($opt),
+        '#data' => array($count=>$perce),
+        '#suffix' => '%',
+      );
+      ++$count; 
+	}
+    $chart['xaxis'] = array(
+      '#type' => 'chart_xaxis',
+      '#labels' => $lblarr,
+    );
+    $bar_chart['chart'] = $chart;
+  }else {
+    $bar_chart = "";  
+  }
+  return $bar_chart;
+}
+
+function draw_chart_pie($dataobjarr, $title) {
+  if (!empty($dataobjarr)) {
+     $total = count($dataobjarr); 
+     $objres = array_count_values($dataobjarr);
+     foreach ($objres as $opt=>$value) {
+	   $perce = round($value/$total*100);
+	   $lblarr[] = $opt;
+	   $valarr[] = $perce;
+     }
+     $chart = array(
+       '#type' => 'chart',
+       '#title' => t($title." (".$total." responses)"),
+       '#chart_type' => 'pie',
+       '#chart_library' => 'google', // Allowed values: 'google' or 'highcharts'
+       '#legend_position' => 'right',
+       '#data_labels' => TRUE,
+       '#tooltips' => TRUE,
+       '#font' => 'OpenSansRegular',
+	   '#title_font_weight' => 'bold',
+     );
+     $chart['pie_data'] = array(
+       '#type' => 'chart_data',
+       '#title' => t('Gender'),
+       '#labels' => $lblarr,
+       '#data' => $valarr,
+     );
+     $pie_chart['chart'] = $chart;
+   }else {
+     $pie_chart = "";  
+   }
+   return $pie_chart;
+}
+
+function ubersurvey_summary_theme(){
+  return array(
+    'summary_tab_contents' => array(
+    'template' => 'summary_tab_contents',
+    'arguments' => array('results' => NULL)),
+  );
+}
+
+function ubersurvey_summary_access_restrict($node) {
+  global $user;
+  if ($node->type == 'qform' && $user->uid == $node->uid) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+function get_survey_definition() {
+  $query = db_select('qforms_definition','qf');
+  $query->fields('qf', array('form_definition'));
+  $query->condition('qf.nid', arg(1));
+  $result = $query->execute()->fetchAll();
+  $obj = unserialize($result[0]->form_definition);
+  foreach ($obj as $key=>$val) {
+	if($key == "qforms_last_element_id") {
+      $sorted_obj[0]= array($key=>$val);
+	}else {  
+      $sorted_obj[$val["weight"]]= array($key=>$val);
+	}
+  }
+  ksort($sorted_obj);
+  return $sorted_obj;
+}

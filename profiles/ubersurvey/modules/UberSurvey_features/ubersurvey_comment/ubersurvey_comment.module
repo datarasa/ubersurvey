@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the UberSurvey Comment feature.
+ */
+
+include_once 'ubersurvey_comment.features.inc';

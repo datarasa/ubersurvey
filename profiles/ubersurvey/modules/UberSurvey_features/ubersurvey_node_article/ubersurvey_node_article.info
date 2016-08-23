@@ -1,0 +1,12 @@
+name = UberSurvey Article
+core = 7.x
+package = Content
+dependencies[] = image
+dependencies[] = taxonomy
+dependencies[] = ubersurvey_fields
+features[ctools][] = strongarm:strongarm:1
+features[features_api][] = api:2
+features[field_instance][] = node-article-body
+features[field_instance][] = node-article-field_image
+features[field_instance][] = node-article-field_tags
+features[node][] = article

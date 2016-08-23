@@ -1,0 +1,23 @@
+name = Features Builder Bonus
+description = "Bonus builders for use with Features Builder."
+package = "Bonus"
+core = 7.x
+
+dependencies[] = features_builder
+files[] = includes/BlockFeaturesBuilder.inc
+files[] = includes/BeanFeaturesBuilder.inc
+files[] = includes/CommentFeaturesBuilder.inc
+files[] = includes/DateFeaturesBuilder.inc
+files[] = includes/EnabledViewsFeaturesBuilder.inc
+files[] = includes/LanguagesFeaturesBuilder.inc
+files[] = includes/ScaldFeaturesBuilder.inc
+files[] = includes/SemanticfieldsFeaturesBuilder.inc
+
+version = "7.x-1.x-dev"
+
+; Information added by Drupal.org packaging script on 2016-07-19
+version = "7.x-1.0-beta2"
+core = "7.x"
+project = "features_builder_bonus"
+datestamp = "1468943530"
+

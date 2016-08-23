@@ -1,0 +1,5 @@
+name = UberSurvey Scald
+core = 7.x
+package = Scald
+dependencies[] = ubersurvey_fields
+features[features_api][] = api:2

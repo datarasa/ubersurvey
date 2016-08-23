@@ -1,0 +1,17 @@
+name = UberSurvey Fields
+core = 7.x
+package = Configuration
+dependencies[] = image
+dependencies[] = list
+dependencies[] = taxonomy
+dependencies[] = ubersurvey_taxonomy
+features[ctools][] = strongarm:strongarm:1
+features[features_api][] = api:2
+features[field_base][] = body
+features[field_base][] = comment_body
+features[field_base][] = field_access_once
+features[field_base][] = field_details
+features[field_base][] = field_first_name
+features[field_base][] = field_image
+features[field_base][] = field_last_name
+features[field_base][] = field_tags

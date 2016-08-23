@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the UberSurvey Media feature.
+ */
+
+include_once 'ubersurvey_media.features.inc';

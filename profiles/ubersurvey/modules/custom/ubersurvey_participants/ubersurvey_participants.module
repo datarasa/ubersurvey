@@ -1,0 +1,144 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function ubersurvey_participants_menu() {
+  $items['node/%node/participants'] = array(
+    'title' => 'Add Participants',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ubersurvey_participants_form'), 
+    'access callback' => 'ubersurvey_participants_access_check',
+    'access arguments' => array(1),
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK,
+  );  
+  
+  return $items;
+}
+
+function ubersurvey_participants_access_check($node) {
+  global $user;
+  if ($node->type == 'qform' && $user->uid == $node->uid) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+function ubersurvey_participants_form($form, &$form_state) {
+  $nodePath = drupal_get_path_alias(arg(0).'/'.arg(1));
+  $iframe = '<iframe src="http://'.$_SERVER['HTTP_HOST'].'/'.$nodePath.'?embedded=true" width="760" height="500" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>';
+  $html  ='<h3>Add participans via:</h3><div class="share-link-main form-item form-group">';
+  $html .='<label class="share-link-label control-label">Link</label>';
+  $html .='<input id="share-link-field" class="form-control form-text" type="text" value=http://'.$_SERVER['HTTP_HOST'].'/'.$nodePath.' readonly onClick="this.select();">';
+  $html .='</div>';
+  $html .='<div class="share-ifram-main form-item form-group">';
+  $html .='<label class="share-ifram-label control-label">Embed HTML</label>';
+  $html .='<textarea id="share-ifram-field" class="form-control form-textarea" readonly onClick="this.select();">'.$iframe.'</textarea>';
+  $html .='</div>';
+  $html .='<div class="social-share-main form-item form-group">';
+  $html .='<label class="social-share-label control-label">Share link</label>';
+  $html .='<div class="social-share-links"><div class="addthis_sharing_toolbox" data-url="'.$_SERVER['HTTP_HOST'].'/'.$nodePath.'"></div></div>';
+  $html .='</div>';
+  $html .='<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-57a3290d03d2df5c"></script>';
+
+  $form['html'] = array(
+        '#type' => 'markup',
+        '#markup' => $html,
+  );
+  $form['emails'] = array(
+    '#type' => 'textarea', 
+    '#title' => 'Enter e-mail addresses for participants you would like to invite',
+    '#suffix' => '<div class="description">Separate e-mail addresses with commas, spaces are not allowed e.g. bob@bob.com,tom@tom.com</div>',
+    '#required' => TRUE,  
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send Email'),
+    '#attributes'=>array('class'=> array('btn-primary'))
+  );
+  
+  return $form;
+}
+
+function ubersurvey_participants_form_submit($form, &$form_state) {
+   global $user;
+   $email_content = get_mail_content($form_state);
+   $params = array('body' => $email_content);
+   $key = 'invite_ubersurvey_email';
+   $to = $form_state['values']['emails'];
+   $from = $user->mail;
+
+   $result = drupal_mail('ubersurvey_participants', $key, $to, language_default(), $params, $from);
+   if ($result['result'] == TRUE) {
+      drupal_set_message(t('Your message has been sent.'));
+   }
+   else {
+     drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+   }
+ }
+
+/**
+ * Implements hook_mail()
+ * @param 
+ *   type $key to decide which email body to sent on basis of key parameter inacese of multiple email content
+ * @param 
+ *   type $message the email content to be sent.Message array contains 'subject and body ' for the email.
+ * @param 
+ *   type $params using to get the cusotm email content from a function.This can be used in my other ways aslo as per need.
+ */
+function ubersurvey_participants_mail($key, &$message, $params) {
+  $language = $message['language'];
+  switch ($key) {
+//switching on $key lets you create variations of the email based on the $key parameter
+    case 'invite_ubersurvey_email':
+      $message['subject'] = t('UberSurvey Invitation');
+//the email body is here, inside the $message array
+      $message['body'][] = $params['body'];
+      break;
+  }
+}
+
+/**
+ * function to get the html formatted email content
+ * @param 
+ *   type $form_state to get values from form fields.
+ * @return 
+ *   $body type string return the html email content 
+ */
+function get_mail_content($form_state) {
+  global $base_url;
+  $alias = drupal_get_path_alias('node/'.arg(1));
+  $path = $base_url."/".$alias;
+  $email_to = $form_state['values']['emails'];
+  global $user;
+  $body = '<div style="background: #3e7293; padding: 5px 20px; ">';
+  $body .= '<img style="text-align:left" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/default/files/logo_inner_0.png" width="150" alt="" border="0"></div>';
+  $body .= '<div style="background: #eeeeee; padding: 10px 20px; line-height: 20px;">';
+  $body .= 'Hi,<br>'.$user->name.' has invited you to participate on '.$path.'<br>Thanks,<br>UberSurvey Team';
+  $body .= '</div>';
+  return $body;
+}
+
+function ubersurvey_participants_form_validate($form, &$form_state) {
+  if (empty($form_state['values']['emails'])) {
+    form_set_error('email', t('You must enter at least one email address.'));
+  }
+  elseif (!empty($form_state['values']['emails'])){
+    // Getting the value of E-mail.
+    $emailString = $form_state['values']['emails'];
+    //  Removing Spaces from E-mail field.
+    $emails = str_replace(" ","",$emailString);
+    //drupal_set_message('<pre>'. print_r($emails, true) .'</pre>'); 
+    $explode = explode(',',$emails); // Explodes the emails by the comma
+    // Loop through each email and validate it
+    foreach($explode as $email) {
+      if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+         form_set_error('emails', t('Please provide valid E-mail addressess.'));
+      }
+    } 
+  }
+}
+
+
+?>
