@@ -47,12 +47,10 @@ function ubersurvey_node_qform_strongarm() {
   $export['menu_parent_qform'] = $strongarm;
 
   $strongarm = new stdClass();
-  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->disabled = FALSE; // Edit this to true to make a default strongarm disabled initially 
   $strongarm->api_version = 1;
   $strongarm->name = 'node_options_qform';
-  $strongarm->value = array(
-    0 => 'status',
-  );
+  $strongarm->value = array();
   $export['node_options_qform'] = $strongarm;
 
   $strongarm = new stdClass();
