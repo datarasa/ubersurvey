@@ -66,7 +66,7 @@ function _ubersurvey_set_theme($target_theme) {
  */
 function install_welcome($form, &$form_state, &$install_state) {
   drupal_set_title(st('Welcome to UberSurvey'));
-  $message = '<p>' . st('Thank you for choosing UberSurvey, a product offered by Orbit Software Solutions.') . '</p>';
+  $message = '<p>' . st('Thank you for choosing UberSurvey, a product offered by Datarasa.') . '</p>';
   $eula = '';
  
   $items = array();
@@ -86,17 +86,7 @@ function install_welcome($form, &$form_state, &$install_state) {
     '#prefix' => '<div id="eula-installation-welcome">',
     '#markup' => $eula,
   );
-  /*$form['eula-accept'] = array(
-    '#title' => st('Privacy Policy and User Agreement'),
-    '#title_display' => 'invisible',
-    '#type' => 'radios',
-    '#default_value' => 1,
-    '#options' => array(
-      1 => st('I agree to the Privacy Policy and User Agreement'),
-      0 => st('I want to opt out and disable content from Commerce Guys'),
-    ),
-    '#suffix' => '</div>',
-  );*/
+
   $form['actions'] = array(
     '#type' => 'actions',
   );
