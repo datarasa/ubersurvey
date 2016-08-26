@@ -63,7 +63,6 @@ dependencies[] = token
 ; Ubersuvey
 dependencies[] = ubersurvey_blocks
 dependencies[] = ubersurvey_participants
-dependencies[] = ubersurvey_summary
 dependencies[] = ubersurvey_ui
 dependencies[] = ubersurvey_access
 ; User interface
